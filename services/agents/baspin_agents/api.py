@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from .models import QuestionAgentRequest, QuestionAgentResponse
 from .normalization_agent import RequirementNormalizationAgent
 from .normalization_models import NormalizationRequest, NormalizationResponse
+from .okf_agent import OKFConversionAgent
+from .okf_models import OKFConversionRequest, OKFConversionResponse
 from .question_agent import QuestionAgent
 from .validation_agent import ValidationAgent
 from .validation_models import ValidationRequest, ValidationResponse
@@ -16,6 +18,7 @@ app = FastAPI(
 _question_agent = QuestionAgent()
 _validation_agent = ValidationAgent()
 _normalization_agent = RequirementNormalizationAgent()
+_okf_agent = OKFConversionAgent()
 
 
 @app.get("/health")
@@ -36,3 +39,11 @@ def validate_knowledge(request: ValidationRequest) -> ValidationResponse:
 @app.post("/requirements/normalize", response_model=NormalizationResponse)
 def normalize_requirements(request: NormalizationRequest) -> NormalizationResponse:
     return _normalization_agent.normalize(request)
+
+
+@app.post("/okf/convert", response_model=OKFConversionResponse)
+def convert_okf(request: OKFConversionRequest) -> OKFConversionResponse:
+    try:
+        return _okf_agent.convert(request)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
