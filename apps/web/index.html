@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Baspin BA Dashboard</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand">Baspin</div>
+        <div class="brand-subtitle">Business Analysis Control Layer</div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-section="overview">Overview</button>
+        <button class="nav-item" data-section="departments">Departments</button>
+        <button class="nav-item" data-section="questions">Questions</button>
+        <button class="nav-item" data-section="conflicts">Conflicts</button>
+        <button class="nav-item" data-section="requirements">Requirements</button>
+        <button class="nav-item" data-section="approvals">Approvals</button>
+        <button class="nav-item" data-section="okf">OKF Preview</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="small-label">Current project</div>
+        <strong>Automated Claim Approval</strong>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Insurance / Claims Automation</div>
+          <h1>Automated Claim Approval</h1>
+          <p>Reduce manual processing for eligible low-risk claims while preserving auditability and required controls.</p>
+        </div>
+        <div class="readiness-badge blocked" id="readinessBadge">BLOCKED</div>
+      </header>
+
+      <section id="overview" class="page-section active">
+        <div class="metric-grid" id="metricGrid"></div>
+
+        <div class="two-column">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="eyebrow">Workflow</div>
+                <h2>Project Progress</h2>
+              </div>
+            </div>
+            <div class="workflow" id="workflow"></div>
+          </article>
+
+          <article class="panel status-panel">
+            <div class="panel-header">
+              <div>
+                <div class="eyebrow">Readiness Gate</div>
+                <h2>Why the project is blocked</h2>
+              </div>
+            </div>
+            <div id="blockers"></div>
+            <button class="primary-btn" id="resolveDemoBtn">Simulate conflict resolution</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="departments" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Ownership</div><h2>Department Status</h2></div>
+        </div>
+        <div class="card-grid" id="departmentGrid"></div>
+      </section>
+
+      <section id="questions" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Question Agent</div><h2>Generated Questions</h2></div>
+        </div>
+        <div class="panel table-panel">
+          <table>
+            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th></tr></thead>
+            <tbody id="questionTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="conflicts" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div>
+        </div>
+        <div id="conflictList" class="stack"></div>
+      </section>
+
+      <section id="requirements" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Normalized Knowledge</div><h2>Requirements</h2></div>
+        </div>
+        <div class="panel table-panel">
+          <table>
+            <thead><tr><th>ID</th><th>Type</th><th>Department</th><th>Requirement</th><th>Status</th></tr></thead>
+            <tbody id="requirementTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="approvals" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Human Governance</div><h2>Approvals</h2></div>
+        </div>
+        <div class="card-grid" id="approvalGrid"></div>
+      </section>
+
+      <section id="okf" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Structured Output</div><h2>OKF Preview</h2></div>
+        </div>
+        <div class="panel code-panel">
+          <div class="okf-lock" id="okfLock">OKF is locked until final approval and readiness prerequisites are satisfied.</div>
+          <pre id="okfPreview"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
