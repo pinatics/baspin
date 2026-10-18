@@ -7,13 +7,15 @@ from .approval_models import (
     ApprovalRevalidationResponse,
 )
 from .approvals import decide_department_review, revalidate_approval
+from .consolidation import consolidate_requirements
+from .consolidation_models import ConsolidatedAnalysis, ConsolidationRequest
 from .models import ReadinessEvaluationRequest, ReadinessEvaluationResponse
 from .readiness import evaluate_readiness
 
 app = FastAPI(
     title="Baspin API",
     version="0.1.0",
-    description="Workflow, approval, and readiness API for Baspin.",
+    description="Workflow, approval, consolidation, and readiness API for Baspin.",
 )
 
 
@@ -44,3 +46,10 @@ def approval_revalidation(
     request: ApprovalRevalidationRequest,
 ) -> ApprovalRevalidationResponse:
     return revalidate_approval(request)
+
+
+@app.post("/consolidation/evaluate", response_model=ConsolidatedAnalysis)
+def consolidation_evaluate(
+    request: ConsolidationRequest,
+) -> ConsolidatedAnalysis:
+    return consolidate_requirements(request)
