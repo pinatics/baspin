@@ -1,0 +1,69 @@
+{
+  "project": {
+    "id": "automated-claim-approval",
+    "name": "Automated Claim Approval",
+    "goal": "Reduce manual processing for eligible low-risk claims while preserving fraud, financial, legal, compliance, and audit controls.",
+    "status": "department_review"
+  },
+  "departments": [
+    "claims_operations",
+    "fraud",
+    "finance",
+    "legal",
+    "compliance",
+    "engineering",
+    "data_analytics",
+    "customer_service"
+  ],
+  "sample_requirements": [
+    {
+      "id": "REQ-CLAIMS-001",
+      "type": "business_rule",
+      "statement": "A claim may be automatically approved only when claim amount is <= 25000, required documentation is complete, coverage is valid, and no blocking fraud or exception condition exists.",
+      "owner": "claims_operations",
+      "approval_status": "pending",
+      "provenance": [
+        {"source_type": "stakeholder_answer", "source_id": "ANS-CLAIMS-001", "confirmed_by": "claims_manager"},
+        {"source_type": "sop", "source_id": "E-001", "confirmed_by": null}
+      ]
+    },
+    {
+      "id": "REQ-FRAUD-001",
+      "type": "risk_control",
+      "statement": "A claim with fraud score >= 80 must be routed to manual investigation.",
+      "owner": "fraud",
+      "approval_status": "pending",
+      "provenance": [
+        {"source_type": "fraud_rules_service", "source_id": "E-003", "confirmed_by": "fraud_manager"}
+      ]
+    },
+    {
+      "id": "REQ-FIN-001",
+      "type": "financial_control",
+      "statement": "Payment release above 15000 requires Finance authorization even if the claim decision itself is automatically approved.",
+      "owner": "finance",
+      "approval_status": "pending",
+      "provenance": [
+        {"source_type": "finance_control_matrix", "source_id": "E-004", "confirmed_by": "finance_operations_manager"}
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "C-001",
+      "type": "threshold_conflict",
+      "severity": "high",
+      "status": "open",
+      "description": "Claims SOP states 25000 while Claims Policy v2.1 states 20000.",
+      "owner": "claims_operations"
+    }
+  ],
+  "readiness": {
+    "status": "blocked",
+    "checks": [
+      {"name": "department_approvals", "status": "pending", "blocking_reason": "Mandatory department review is incomplete."},
+      {"name": "critical_conflicts", "status": "fail", "blocking_reason": "C-001 remains unresolved."},
+      {"name": "okf_approval", "status": "pending", "blocking_reason": "Final OKF has not yet been generated and approved."}
+    ]
+  }
+}
