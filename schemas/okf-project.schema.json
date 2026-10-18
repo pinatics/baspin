@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://baspin.local/schemas/okf-project.schema.json",
+  "title": "Baspin OKF Project",
+  "type": "object",
+  "required": ["project", "actors", "requirements", "approvals", "readiness"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "goal", "status"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "goal": {"type": "string"},
+        "status": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "actors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string"},
+          "owner": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "statement", "owner", "approval_status", "provenance"],
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string"},
+          "statement": {"type": "string"},
+          "owner": {"type": "string"},
+          "approval_status": {
+            "type": "string",
+            "enum": ["approved", "rejected", "needs_clarification", "pending", "superseded"]
+          },
+          "provenance": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["source_type", "source_id"],
+              "properties": {
+                "source_type": {"type": "string"},
+                "source_id": {"type": "string"},
+                "confirmed_by": {"type": ["string", "null"]}
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target_id", "approver", "decision"],
+        "properties": {
+          "target_id": {"type": "string"},
+          "approver": {"type": "string"},
+          "decision": {
+            "type": "string",
+            "enum": ["approved", "rejected", "needs_clarification", "abstained"]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["status", "checks"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["ready", "blocked"]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "status"],
+            "properties": {
+              "name": {"type": "string"},
+              "status": {
+                "type": "string",
+                "enum": ["pass", "fail", "pending", "not_applicable"]
+              },
+              "blocking_reason": {"type": ["string", "null"]}
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
