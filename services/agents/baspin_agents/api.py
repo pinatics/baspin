@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 
 from .models import QuestionAgentRequest, QuestionAgentResponse
+from .normalization_agent import RequirementNormalizationAgent
+from .normalization_models import NormalizationRequest, NormalizationResponse
 from .question_agent import QuestionAgent
 from .validation_agent import ValidationAgent
 from .validation_models import ValidationRequest, ValidationResponse
@@ -13,6 +15,7 @@ app = FastAPI(
 
 _question_agent = QuestionAgent()
 _validation_agent = ValidationAgent()
+_normalization_agent = RequirementNormalizationAgent()
 
 
 @app.get("/health")
@@ -28,3 +31,8 @@ def generate_questions(request: QuestionAgentRequest) -> QuestionAgentResponse:
 @app.post("/validation/evaluate", response_model=ValidationResponse)
 def validate_knowledge(request: ValidationRequest) -> ValidationResponse:
     return _validation_agent.validate(request)
+
+
+@app.post("/requirements/normalize", response_model=NormalizationResponse)
+def normalize_requirements(request: NormalizationRequest) -> NormalizationResponse:
+    return _normalization_agent.normalize(request)
