@@ -2,6 +2,8 @@ from fastapi import FastAPI
 
 from .models import QuestionAgentRequest, QuestionAgentResponse
 from .question_agent import QuestionAgent
+from .validation_agent import ValidationAgent
+from .validation_models import ValidationRequest, ValidationResponse
 
 app = FastAPI(
     title="Baspin Agents API",
@@ -10,6 +12,7 @@ app = FastAPI(
 )
 
 _question_agent = QuestionAgent()
+_validation_agent = ValidationAgent()
 
 
 @app.get("/health")
@@ -20,3 +23,8 @@ def health() -> dict[str, str]:
 @app.post("/questions/generate", response_model=QuestionAgentResponse)
 def generate_questions(request: QuestionAgentRequest) -> QuestionAgentResponse:
     return _question_agent.generate(request)
+
+
+@app.post("/validation/evaluate", response_model=ValidationResponse)
+def validate_knowledge(request: ValidationRequest) -> ValidationResponse:
+    return _validation_agent.validate(request)
