@@ -69,11 +69,24 @@ class RequirementNormalizationAgent:
 
     @staticmethod
     def _classify_type(topic: str, value: str, process_step: str | None) -> RequirementType:
+        topic_text = topic.lower()
         text = f"{topic} {value} {process_step or ''}".lower()
+
+        # Business decision/eligibility rules should not be reclassified merely
+        # because their wording mentions a compliance or fraud exception.
+        if any(term in topic_text for term in [
+            "claim_approval",
+            "approval_threshold",
+            "eligibility",
+            "renewal_rules",
+            "business_rule",
+            "decision_rule",
+        ]):
+            return RequirementType.BUSINESS_RULE
 
         if any(word in text for word in ["payment", "finance", "authorization", "settlement", "reserve"]):
             return RequirementType.FINANCIAL_CONTROL
-        if any(word in text for word in ["compliance", "regulatory", "retention", "audit"]):
+        if any(word in text for word in ["retention", "regulatory requirement", "regulation", "audit requirement"]):
             return RequirementType.COMPLIANCE_REQUIREMENT
         if any(word in text for word in ["security", "encryption", "access control", "authentication"]):
             return RequirementType.SECURITY_REQUIREMENT
