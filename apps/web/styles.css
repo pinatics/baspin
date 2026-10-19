@@ -104,6 +104,22 @@ p { color: var(--muted); margin: 0; line-height: 1.55; }
 .source-pill { display: inline-block; border-radius: 999px; padding: 5px 8px; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .source-pill.ai { background: #eef4ff; color: #3538cd; }
 .source-pill.ba { background: #f4ebff; color: #7f56d9; }
+.row-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.attachment-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+.attachment-panel { margin-bottom: 18px; }
+.attachment-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.upload-box, .voice-box { border: 1px dashed #b9c0cc; border-radius: 12px; padding: 16px; background: #fafbfc; display: grid; gap: 8px; }
+.upload-box { cursor: pointer; }
+.upload-box span, .voice-box span { color: var(--muted); font-size: 12px; }
+.upload-box input { margin-top: 6px; }
+.voice-timer { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; color: var(--text) !important; }
+.attachment-list { display: grid; gap: 10px; }
+.attachment-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.attachment-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.attachment-main audio { max-width: 260px; }
+.attachment-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; border: 1px solid var(--line); }
+.attachment-note { margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: var(--warn-bg); color: var(--warn); font-size: 12px; }
 
 .answer-layout { grid-template-columns: .9fr 1.1fr; align-items: start; }
 .answer-form { position: sticky; top: 24px; }
@@ -154,10 +170,13 @@ pre { overflow-x: auto; background: #0b1220; color: #d1e9ff; border-radius: 10px
   .sidebar-footer { display: none; }
   .two-column, .metric-grid, .card-grid { grid-template-columns: 1fr 1fr; }
   .answer-form { position: static; }
+  .attachment-actions { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
   .main-content { padding: 20px; }
   .topbar { display: block; }
   .readiness-badge { display: inline-block; margin-top: 14px; }
   .two-column, .metric-grid, .card-grid, .nav, .form-grid, .answer-layout { grid-template-columns: 1fr; }
+  .attachment-item, .attachment-main { align-items: flex-start; }
+  .attachment-main { flex-direction: column; }
 }
