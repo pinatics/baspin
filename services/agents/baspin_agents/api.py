@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from .models import QuestionAgentRequest, QuestionAgentResponse
 from .normalization_agent import RequirementNormalizationAgent
@@ -13,6 +14,19 @@ app = FastAPI(
     title="Baspin Agents API",
     version="0.1.0",
     description="Agent endpoints for Baspin business analysis workflows.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://pinatics.github.io",
+        "http://localhost:8001",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 _question_agent = QuestionAgent()
