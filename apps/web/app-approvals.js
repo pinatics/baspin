@@ -169,11 +169,11 @@
 
     grid.innerHTML = requirements.map(requirement => {
       const record = activeApprovalFor(requirement.id);
-      const currentStatus = record?.stale ? "STALE" : (record?.packageStatus || requirement.status || "DEPARTMENT_REVIEW");
+      const currentStatus = record?.stale ? "STALE" : (record?.packageStatus || "DEPARTMENT_REVIEW");
       const conflictCount = openConflictIdsForRequirement(requirement).length;
       const approvalMeta = record?.approval
         ? `Approver: ${escapeHtml(record.approval.approver)} · Decision: ${escapeHtml(record.approval.decision)} · Version v${record.requirementVersion}`
-        : `Owner: ${escapeHtml(requirement.owner || "Department Owner")} · Version v${requirement.version || 1}`;
+        : `Awaiting human review · Owner: ${escapeHtml(requirement.owner || "Department Owner")} · Version v${requirement.version || 1}`;
 
       return `
         <div class="mini-card approval-review-card">
