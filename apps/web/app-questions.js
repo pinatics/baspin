@@ -18,6 +18,7 @@
     if (!question.source) question.source = "AI Generated";
     if (typeof question.editedByBA !== "boolean") question.editedByBA = false;
     if (!question.related) question.related = "";
+    if (!Array.isArray(question.attachments)) question.attachments = [];
     return question;
   }
 
@@ -62,6 +63,7 @@
     state.questions = state.questions.map(ensureQuestionMetadata);
     document.getElementById("questionTable").innerHTML = state.questions.map((q, index) => {
       const sourceLabel = q.source === "BA Added" ? "BA Added" : (q.editedByBA ? "AI Generated · edited by BA" : "AI Generated");
+      const attachmentCount = q.attachments?.length || 0;
       return `
         <tr>
           <td><span class="status-pill ${q.priority === "CRITICAL" ? "critical" : q.priority === "HIGH" ? "high" : "pending"}">${q.priority}</span></td>
@@ -70,7 +72,8 @@
           <td>${q.owner || "—"}</td>
           <td>${q.type || "INITIAL"}</td>
           <td><span class="source-pill ${q.source === "BA Added" ? "ba" : "ai"}">${sourceLabel}</span></td>
-          <td><button class="link-btn question-edit-btn" type="button" data-index="${index}">Edit</button></td>
+          <td><span class="attachment-count">${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}</span></td>
+          <td><div class="row-actions"><button class="link-btn question-edit-btn" type="button" data-index="${index}">Edit</button><button class="link-btn question-attach-btn" type="button" data-index="${index}">Attach</button></div></td>
         </tr>`;
     }).join("");
 
@@ -78,6 +81,13 @@
       button.addEventListener("click", () => {
         const index = Number(button.dataset.index);
         showEditor(state.questions[index], index);
+      });
+    });
+
+    document.querySelectorAll(".question-attach-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.index);
+        if (window.openQuestionAttachments) window.openQuestionAttachments(index);
       });
     });
   };
