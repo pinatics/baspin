@@ -13,8 +13,8 @@
         <div class="brand">Baspin</div>
         <div class="brand-subtitle">Business Analysis Control Layer</div>
       </div>
-
       <nav class="nav">
+        <button class="nav-item" data-section="new-project">+ New Project</button>
         <button class="nav-item active" data-section="overview">Overview</button>
         <button class="nav-item" data-section="departments">Departments</button>
         <button class="nav-item" data-section="questions">Questions</button>
@@ -23,109 +23,56 @@
         <button class="nav-item" data-section="approvals">Approvals</button>
         <button class="nav-item" data-section="okf">OKF Preview</button>
       </nav>
-
       <div class="sidebar-footer">
         <div class="small-label">Current project</div>
-        <strong>Automated Claim Approval</strong>
+        <strong id="sidebarProjectName">Automated Claim Approval</strong>
       </div>
     </aside>
 
     <main class="main-content">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Insurance / Claims Automation</div>
-          <h1>Automated Claim Approval</h1>
-          <p>Reduce manual processing for eligible low-risk claims while preserving auditability and required controls.</p>
+          <div class="eyebrow" id="projectEyebrow">Insurance / Claims Automation</div>
+          <h1 id="projectTitle">Automated Claim Approval</h1>
+          <p id="projectGoal">Reduce manual processing for eligible low-risk claims while preserving auditability and required controls.</p>
         </div>
         <div class="readiness-badge blocked" id="readinessBadge">BLOCKED</div>
       </header>
 
+      <section id="new-project" class="page-section">
+        <div class="section-heading"><div><div class="eyebrow">Start a workflow</div><h2>Create New Project</h2></div></div>
+        <form class="panel project-form" id="newProjectForm">
+          <div class="form-grid">
+            <label><span>Project name</span><input id="newProjectName" required placeholder="e.g. Automated Policy Renewal" /></label>
+            <label><span>Industry / use case</span><input id="newProjectIndustry" required placeholder="e.g. Insurance / Policy Operations" /></label>
+          </div>
+          <label><span>Business goal</span><textarea id="newProjectGoal" required rows="3" placeholder="What business outcome should this project achieve?"></textarea></label>
+          <label><span>Scope</span><textarea id="newProjectScope" rows="2" placeholder="Optional: systems, process boundaries, exclusions..."></textarea></label>
+          <label><span>Required departments and owners</span><textarea id="newProjectDepartments" required rows="6" placeholder="Claims Operations | Claims Manager&#10;Finance | Finance Operations Manager&#10;Legal | Legal Counsel"></textarea><small>One per line. Format: Department | Owner</small></label>
+          <div class="form-actions"><button class="primary-btn" type="submit" id="createProjectBtn">Create project & generate questions</button><span class="form-status" id="newProjectStatus"></span></div>
+        </form>
+      </section>
+
       <section id="overview" class="page-section active">
         <div class="metric-grid" id="metricGrid"></div>
-
         <div class="two-column">
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <div class="eyebrow">Workflow</div>
-                <h2>Project Progress</h2>
-              </div>
-            </div>
-            <div class="workflow" id="workflow"></div>
-          </article>
-
-          <article class="panel status-panel">
-            <div class="panel-header">
-              <div>
-                <div class="eyebrow">Readiness Gate</div>
-                <h2 id="readinessPanelTitle">Why the project is blocked</h2>
-              </div>
-            </div>
-            <div id="blockers"></div>
-            <button class="primary-btn" id="resolveDemoBtn">Simulate conflict resolution</button>
-          </article>
+          <article class="panel"><div class="panel-header"><div><div class="eyebrow">Workflow</div><h2>Project Progress</h2></div></div><div class="workflow" id="workflow"></div></article>
+          <article class="panel status-panel"><div class="panel-header"><div><div class="eyebrow">Readiness Gate</div><h2 id="readinessPanelTitle">Why the project is blocked</h2></div></div><div id="blockers"></div><button class="primary-btn" id="resolveDemoBtn">Validate with live Baspin</button></article>
         </div>
       </section>
 
-      <section id="departments" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Ownership</div><h2>Department Status</h2></div>
-        </div>
-        <div class="card-grid" id="departmentGrid"></div>
-      </section>
-
-      <section id="questions" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Question Agent</div><h2>Generated Questions</h2></div>
-        </div>
-        <div class="panel table-panel">
-          <table>
-            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th></tr></thead>
-            <tbody id="questionTable"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="conflicts" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div>
-        </div>
-        <div id="conflictList" class="stack"></div>
-      </section>
-
-      <section id="requirements" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Normalized Knowledge</div><h2>Requirements</h2></div>
-        </div>
-        <div class="panel table-panel">
-          <table>
-            <thead><tr><th>ID</th><th>Type</th><th>Department</th><th>Requirement</th><th>Status</th></tr></thead>
-            <tbody id="requirementTable"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section id="approvals" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Human Governance</div><h2>Approvals</h2></div>
-        </div>
-        <div class="card-grid" id="approvalGrid"></div>
-      </section>
-
-      <section id="okf" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Structured Output</div><h2>OKF Preview</h2></div>
-        </div>
-        <div class="panel code-panel">
-          <div class="okf-lock" id="okfLock">OKF is locked until final approval and readiness prerequisites are satisfied.</div>
-          <pre id="okfPreview"></pre>
-        </div>
-      </section>
+      <section id="departments" class="page-section"><div class="section-heading"><div><div class="eyebrow">Ownership</div><h2>Department Status</h2></div></div><div class="card-grid" id="departmentGrid"></div></section>
+      <section id="questions" class="page-section"><div class="section-heading"><div><div class="eyebrow">Question Agent</div><h2>Generated Questions</h2></div></div><div class="panel table-panel"><table><thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th></tr></thead><tbody id="questionTable"></tbody></table></div></section>
+      <section id="conflicts" class="page-section"><div class="section-heading"><div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div></div><div id="conflictList" class="stack"></div></section>
+      <section id="requirements" class="page-section"><div class="section-heading"><div><div class="eyebrow">Normalized Knowledge</div><h2>Requirements</h2></div></div><div class="panel table-panel"><table><thead><tr><th>ID</th><th>Type</th><th>Department</th><th>Requirement</th><th>Status</th></tr></thead><tbody id="requirementTable"></tbody></table></div></section>
+      <section id="approvals" class="page-section"><div class="section-heading"><div><div class="eyebrow">Human Governance</div><h2>Approvals</h2></div></div><div class="card-grid" id="approvalGrid"></div></section>
+      <section id="okf" class="page-section"><div class="section-heading"><div><div class="eyebrow">Structured Output</div><h2>OKF Preview</h2></div></div><div class="panel code-panel"><div class="okf-lock" id="okfLock">OKF is locked until final approval and readiness prerequisites are satisfied.</div><pre id="okfPreview"></pre></div></section>
     </main>
   </div>
 
   <script src="./config.js"></script>
   <script src="./app.js"></script>
   <script src="./app-live.js"></script>
+  <script src="./app-project.js"></script>
 </body>
 </html>
