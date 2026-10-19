@@ -19,11 +19,17 @@ class ValidationAgent:
         findings: list[ValidationFinding] = []
         validated_fact_ids: list[str] = []
 
+        superseded_ids = {
+            superseded_id
+            for fact in request.facts
+            for superseded_id in fact.supersedes
+        }
+        active_facts = [fact for fact in request.facts if fact.id not in superseded_ids]
+
         by_topic = defaultdict(list)
-        for fact in request.facts:
+        for fact in active_facts:
             by_topic[fact.topic.strip().lower()].append(fact)
 
-        # Required-topic coverage.
         for required_topic in request.required_topics:
             key = required_topic.strip().lower()
             if key not in by_topic:
@@ -33,7 +39,7 @@ class ValidationAgent:
                         FindingType.MISSING_INFORMATION,
                         FindingSeverity.HIGH,
                         required_topic,
-                        f"No fact was supplied for required topic '{required_topic}'.",
+                        f"No active fact was supplied for required topic '{required_topic}'.",
                         [],
                         blocking=True,
                         clarification_question=(
@@ -73,7 +79,7 @@ class ValidationAgent:
                             FindingType.CONFLICT,
                             FindingSeverity.HIGH,
                             topic,
-                            "Sources disagree on the same business topic and no authoritative value can be selected automatically.",
+                            "Active sources disagree on the same business topic and no authoritative value can be selected automatically.",
                             [f.id for f in facts],
                             owner=self._first_owner(facts),
                             blocking=True,
@@ -120,16 +126,21 @@ class ValidationAgent:
                     )
 
             topic_has_blocking = any(
-                f.blocking and f.topic.strip().lower() == topic for f in findings
+                finding.blocking and finding.topic.strip().lower() == topic
+                for finding in findings
             )
             if not topic_has_blocking:
                 validated_fact_ids.extend(f.id for f in facts if f.approved)
 
         warnings: list[str] = []
-        unapproved_count = sum(1 for fact in request.facts if not fact.approved)
+        unapproved_count = sum(1 for fact in active_facts if not fact.approved)
         if unapproved_count:
             warnings.append(
-                f"{unapproved_count} fact(s) are not approved and cannot be treated as final business truth."
+                f"{unapproved_count} active fact(s) are not approved and cannot be treated as final business truth."
+            )
+        if superseded_ids:
+            warnings.append(
+                f"{len(superseded_ids)} historical fact(s) were retained for audit but excluded from active conflict evaluation because a later resolution superseded them."
             )
 
         return ValidationResponse(
