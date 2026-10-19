@@ -16,6 +16,7 @@
   const processStepInput = document.getElementById("answerProcessStep");
   const approvedInput = document.getElementById("answerApproved");
   const statusEl = document.getElementById("answerStatus");
+  const contextAttachments = document.getElementById("answerQuestionAttachments");
 
   if (!Array.isArray(state.answers)) state.answers = [];
   if (!Array.isArray(state.validationFindings)) state.validationFindings = [];
@@ -40,6 +41,13 @@
       .replace(/'/g, "&#039;");
   }
 
+  function formatTime(seconds) {
+    const value = Math.max(0, Math.min(300, Math.floor(seconds || 0)));
+    const mm = String(Math.floor(value / 60)).padStart(2, "0");
+    const ss = String(value % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
   function currentProjectId() {
     return state.currentProject?.id || "insurance-automated-claim-approval";
   }
@@ -54,6 +62,31 @@
     return slugify(`${question?.department || "business"}_${question?.id || `question_${index + 1}`}`);
   }
 
+  function renderQuestionContextAttachments(question) {
+    if (!contextAttachments) return;
+    const attachments = Array.isArray(question?.attachments) ? question.attachments : [];
+    if (!attachments.length) {
+      contextAttachments.classList.add("hidden");
+      contextAttachments.innerHTML = "";
+      return;
+    }
+
+    contextAttachments.classList.remove("hidden");
+    contextAttachments.innerHTML = `
+      <div class="answer-context-title">Question context attachments</div>
+      <div class="answer-context-list">
+        ${attachments.map(item => {
+          if (item.kind === "image" && item.url) {
+            return `<div class="answer-context-item"><img class="answer-context-image" src="${item.url}" alt="${escapeHtml(item.name)}" /><div><strong>${escapeHtml(item.name)}</strong><div class="card-meta">IMAGE</div></div></div>`;
+          }
+          if (item.kind === "voice" && item.url) {
+            return `<div class="answer-context-item"><div><strong>${escapeHtml(item.name)}</strong><div class="card-meta">VOICE · ${formatTime(item.durationSeconds)}</div><audio controls src="${item.url}"></audio></div></div>`;
+          }
+          return `<div class="answer-context-item"><div><strong>${escapeHtml(item.name)}</strong><div class="card-meta">FILE</div>${item.url ? `<a class="attachment-open-link" href="${item.url}" target="_blank" rel="noopener">Open file</a>` : ""}</div></div>`;
+        }).join("")}
+      </div>`;
+  }
+
   function selectQuestion(index, answerIndex = null) {
     const question = state.questions[index];
     if (!question) return;
@@ -61,6 +94,7 @@
     editingAnswerIndex = answerIndex;
     questionIndexInput.value = String(index);
     formTitle.textContent = `${question.department}: ${question.text}`;
+    renderQuestionContextAttachments(question);
 
     if (answerIndex !== null && state.answers[answerIndex]) {
       const answer = state.answers[answerIndex];
@@ -101,6 +135,7 @@
       const records = answerForQuestion(index);
       const answered = records.length > 0;
       const confirmed = records.some(record => record.approved);
+      const attachmentCount = Array.isArray(question.attachments) ? question.attachments.length : 0;
       return `
         <button class="answer-question-card" type="button" data-question-index="${index}">
           <div class="answer-question-top">
@@ -108,7 +143,7 @@
             <span class="status-pill ${confirmed ? "approved" : answered ? "high" : "pending"}">${confirmed ? "CONFIRMED" : answered ? "ANSWERED" : "OPEN"}</span>
           </div>
           <span>${escapeHtml(question.text)}</span>
-          <small>${records.length} answer record${records.length === 1 ? "" : "s"}</small>
+          <small>${records.length} answer record${records.length === 1 ? "" : "s"}${attachmentCount ? ` · ${attachmentCount} context attachment${attachmentCount === 1 ? "" : "s"}` : ""}</small>
         </button>`;
     }).join("") : `<div class="mini-card"><div class="card-title">No questions yet</div><div class="card-meta">Create a project or add a BA question first.</div></div>`;
 
