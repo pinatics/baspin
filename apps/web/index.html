@@ -84,9 +84,37 @@
             <button class="secondary-btn" type="button" id="cancelQuestionEdit">Cancel</button>
           </div>
         </form>
+
+        <div class="panel attachment-panel hidden" id="questionAttachmentPanel">
+          <div class="panel-header">
+            <div><div class="eyebrow">Question context</div><h2 id="attachmentPanelTitle">Attachments</h2></div>
+            <button class="secondary-btn" type="button" id="closeAttachmentPanel">Close</button>
+          </div>
+          <input type="hidden" id="attachmentQuestionIndex" value="" />
+          <div class="attachment-actions">
+            <label class="upload-box">
+              <strong>Upload image or file</strong>
+              <span>Images, PDF, Word, Excel, CSV and text files</span>
+              <input id="questionFileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" />
+            </label>
+            <div class="voice-box">
+              <strong>Voice message</strong>
+              <span>Maximum 5 minutes</span>
+              <div class="form-actions">
+                <button class="primary-btn" type="button" id="startVoiceBtn">Start recording</button>
+                <button class="secondary-btn" type="button" id="stopVoiceBtn" disabled>Stop</button>
+                <span class="voice-timer" id="voiceTimer">00:00 / 05:00</span>
+              </div>
+              <div class="form-status" id="voiceStatus">Microphone permission will be requested when recording starts.</div>
+            </div>
+          </div>
+          <div id="questionAttachmentList" class="attachment-list"></div>
+          <div class="attachment-note">Prototype note: attachments currently remain in this browser session. Persistent secure file storage will be connected next.</div>
+        </div>
+
         <div class="panel table-panel">
           <table>
-            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th><th>Type</th><th>Source</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th><th>Type</th><th>Source</th><th>Attachments</th><th>Actions</th></tr></thead>
             <tbody id="questionTable"></tbody>
           </table>
         </div>
@@ -140,6 +168,7 @@
   <script src="./app-live.js"></script>
   <script src="./app-project.js"></script>
   <script src="./app-questions.js"></script>
+  <script src="./app-attachments.js"></script>
   <script src="./app-answers.js"></script>
 </body>
 </html>
