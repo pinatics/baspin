@@ -13,6 +13,7 @@
   if (!addButton || !editor) return;
 
   function ensureQuestionMetadata(question) {
+    if (!question.id) question.id = `question-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     if (!question.type) question.type = "INITIAL";
     if (!question.source) question.source = "AI Generated";
     if (typeof question.editedByBA !== "boolean") question.editedByBA = false;
@@ -109,6 +110,7 @@
     }
 
     renderQuestions();
+    if (window.renderAnswers) window.renderAnswers();
     hideEditor();
   });
 
