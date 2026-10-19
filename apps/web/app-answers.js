@@ -64,7 +64,7 @@
 
     if (answerIndex !== null && state.answers[answerIndex]) {
       const answer = state.answers[answerIndex];
-      topicInput.value = answer.topic || defaultTopic(question, index);
+      topicInput.value = answer.originalTopic || answer.topic || defaultTopic(question, index);
       valueInput.value = answer.value || "";
       sourceTypeInput.value = answer.sourceType || "stakeholder_answer";
       sourceNameInput.value = answer.sourceName || "";
@@ -119,10 +119,13 @@
     answerTable.innerHTML = state.answers.length ? state.answers.map((answer, index) => {
       const question = state.questions[answer.questionIndex] || {};
       const status = answerStatus(answer);
+      const topicDisplay = answer.topicNormalized && answer.originalTopic && answer.originalTopic !== answer.topic
+        ? `${answer.topic} ← ${answer.originalTopic}`
+        : answer.topic;
       return `
         <tr>
           <td>${escapeHtml(answer.department || question.department || "—")}</td>
-          <td><code>${escapeHtml(answer.topic)}</code></td>
+          <td><code>${escapeHtml(topicDisplay)}</code></td>
           <td>${escapeHtml(answer.value)}</td>
           <td>${escapeHtml(answer.sourceName || answer.sourceType || "—")}</td>
           <td>${answer.approved ? "Yes" : "No"}</td>
@@ -189,6 +192,7 @@
         related: relatedKey,
         source: "AI Generated",
         editedByBA: false,
+        attachments: [],
       });
       addedClarifications += 1;
     });
@@ -220,6 +224,32 @@
     return payload;
   }
 
+  async function normalizeTopics() {
+    const response = await postJson(`${agentsBase}/topics/normalize`, {
+      project_id: currentProjectId(),
+      items: state.answers.map(answer => {
+        const question = state.questions[answer.questionIndex] || {};
+        return {
+          id: answer.id,
+          proposed_topic: answer.originalTopic || answer.topic || "",
+          question_text: question.text || "",
+          answer_text: answer.value || "",
+          department: answer.department || question.department || "",
+        };
+      }),
+    });
+
+    const byId = new Map((response.topics || []).map(item => [item.id, item]));
+    state.answers.forEach(answer => {
+      const normalized = byId.get(answer.id);
+      if (!normalized) return;
+      if (!answer.originalTopic) answer.originalTopic = answer.topic;
+      answer.topic = normalized.canonical_topic;
+      answer.topicNormalizationReason = normalized.reason;
+      answer.topicNormalized = true;
+    });
+  }
+
   form.addEventListener("submit", event => {
     event.preventDefault();
     const questionIndex = Number(questionIndexInput.value);
@@ -235,6 +265,8 @@
       questionIndex,
       questionId: question.id || `question-${questionIndex + 1}`,
       topic: topicInput.value.trim(),
+      originalTopic: topicInput.value.trim(),
+      topicNormalized: false,
       value: valueInput.value.trim(),
       sourceType: sourceTypeInput.value,
       sourceName: sourceNameInput.value.trim(),
@@ -263,10 +295,16 @@
     }
 
     validateButton.disabled = true;
-    validateButton.textContent = "Validating…";
-    statusEl.textContent = "Calling the live Baspin Validation Agent.";
+    validateButton.textContent = "Normalizing topics…";
+    statusEl.textContent = "Baspin is normalizing business topics before validation.";
 
     try {
+      await normalizeTopics();
+      window.renderAnswers();
+
+      validateButton.textContent = "Validating…";
+      statusEl.textContent = "Calling the live Baspin Validation Agent.";
+
       const response = await postJson(`${agentsBase}/validation/evaluate`, {
         project_id: currentProjectId(),
         facts: state.answers.map(answer => ({
@@ -284,7 +322,7 @@
       });
 
       renderValidationFindings(response);
-      statusEl.textContent = `${(response.findings || []).length} validation finding(s). ${(response.validated_fact_ids || []).length} approved fact(s) validated.`;
+      statusEl.textContent = `Topics normalized. ${(response.findings || []).length} validation finding(s). ${(response.validated_fact_ids || []).length} approved fact(s) validated.`;
     } catch (error) {
       statusEl.textContent = `Validation failed: ${error.message || error}`;
     } finally {
