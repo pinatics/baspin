@@ -12,9 +12,8 @@ from .topic_models import (
 class TopicNormalizationAgent:
     """Deterministic topic canonicalizer for early Baspin workflows.
 
-    This intentionally uses transparent rules rather than silently inventing
-    semantic mappings. It normalizes formatting and maps a small set of common
-    business-language concepts to stable canonical topics.
+    The agent uses transparent bilingual rules so English and Turkish answers
+    describing the same business concept converge on the same canonical topic.
     """
 
     def normalize(self, request: TopicNormalizationRequest) -> TopicNormalizationResponse:
@@ -38,36 +37,36 @@ class TopicNormalizationAgent:
         return TopicNormalizationResponse(project_id=request.project_id, topics=topics)
 
     def _canonical_topic(self, original: str, combined: str) -> tuple[str, str]:
-        patterns = [
+        groups = [
             (
-                ("renew", "policy"),
+                [("renew", "policy"), ("poliçe", "yenile"), ("police", "yenile")],
                 "policy_renewal_rules",
-                "Matched policy-renewal language across question/answer context.",
+                "Matched policy-renewal / poliçe-yenileme language.",
             ),
             (
-                ("payment", "authoriz"),
+                [("payment", "authoriz"), ("ödeme", "onay"), ("odeme", "onay"), ("ödeme", "yetki"), ("odeme", "yetki")],
                 "payment_authorization",
-                "Matched payment-authorization language across question/answer context.",
+                "Matched payment-authorization / ödeme-onayı language.",
             ),
             (
-                ("claim", "approval", "threshold"),
+                [("claim", "approval", "threshold"), ("hasar", "onay", "limit"), ("hasar", "onay", "eşik"), ("hasar", "onay", "esik")],
                 "automatic_claim_approval_threshold",
-                "Matched claim approval threshold language.",
+                "Matched claim-approval-threshold / hasar-onay-limiti language.",
             ),
             (
-                ("retention",),
+                [("retention",), ("saklama",), ("muhafaza",)],
                 "record_retention",
-                "Matched retention language.",
+                "Matched record-retention / kayıt-saklama language.",
             ),
             (
-                ("fraud",),
+                [("fraud",), ("dolandırıc",), ("dolandiric",), ("sahtecilik",)],
                 "fraud_controls",
                 "Matched fraud-control language.",
             ),
         ]
 
-        for needles, canonical, reason in patterns:
-            if all(needle in combined for needle in needles):
+        for alternatives, canonical, reason in groups:
+            if any(all(needle in combined for needle in needles) for needles in alternatives):
                 return canonical, reason
 
         fallback = self._slug(original)
@@ -79,6 +78,14 @@ class TopicNormalizationAgent:
 
     @staticmethod
     def _slug(value: str) -> str:
-        value = value.lower().strip()
+        translation = str.maketrans({
+            "ç": "c",
+            "ğ": "g",
+            "ı": "i",
+            "ö": "o",
+            "ş": "s",
+            "ü": "u",
+        })
+        value = value.lower().translate(translation).strip()
         value = re.sub(r"[^a-z0-9]+", "_", value)
         return value.strip("_")[:80]
