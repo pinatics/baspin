@@ -62,7 +62,35 @@
       </section>
 
       <section id="departments" class="page-section"><div class="section-heading"><div><div class="eyebrow">Ownership</div><h2>Department Status</h2></div></div><div class="card-grid" id="departmentGrid"></div></section>
-      <section id="questions" class="page-section"><div class="section-heading"><div><div class="eyebrow">Question Agent</div><h2>Generated Questions</h2></div></div><div class="panel table-panel"><table><thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th></tr></thead><tbody id="questionTable"></tbody></table></div></section>
+
+      <section id="questions" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Question Workspace</div><h2>Questions</h2></div>
+          <button class="primary-btn" type="button" id="addQuestionBtn">+ Add Question</button>
+        </div>
+        <form class="panel question-editor hidden" id="questionEditor">
+          <input type="hidden" id="questionEditIndex" value="" />
+          <div class="form-grid">
+            <label><span>Department</span><input id="questionDepartment" required /></label>
+            <label><span>Owner</span><input id="questionOwner" required /></label>
+            <label><span>Priority</span><select id="questionPriority"><option>CRITICAL</option><option>HIGH</option><option selected>MEDIUM</option><option>LOW</option></select></label>
+            <label><span>Type</span><select id="questionType"><option>INITIAL</option><option>FOLLOW_UP</option><option>CLARIFICATION</option><option>CONFLICT_RESOLUTION</option><option>APPROVAL_CONFIRMATION</option></select></label>
+          </div>
+          <label><span>Question</span><textarea id="questionText" rows="3" required></textarea></label>
+          <label><span>Related issue / requirement</span><input id="questionRelated" placeholder="Optional" /></label>
+          <div class="form-actions">
+            <button class="primary-btn" type="submit">Save question</button>
+            <button class="secondary-btn" type="button" id="cancelQuestionEdit">Cancel</button>
+          </div>
+        </form>
+        <div class="panel table-panel">
+          <table>
+            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th><th>Type</th><th>Source</th><th>Actions</th></tr></thead>
+            <tbody id="questionTable"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section id="conflicts" class="page-section"><div class="section-heading"><div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div></div><div id="conflictList" class="stack"></div></section>
       <section id="requirements" class="page-section"><div class="section-heading"><div><div class="eyebrow">Normalized Knowledge</div><h2>Requirements</h2></div></div><div class="panel table-panel"><table><thead><tr><th>ID</th><th>Type</th><th>Department</th><th>Requirement</th><th>Status</th></tr></thead><tbody id="requirementTable"></tbody></table></div></section>
       <section id="approvals" class="page-section"><div class="section-heading"><div><div class="eyebrow">Human Governance</div><h2>Approvals</h2></div></div><div class="card-grid" id="approvalGrid"></div></section>
@@ -74,5 +102,6 @@
   <script src="./app.js"></script>
   <script src="./app-live.js"></script>
   <script src="./app-project.js"></script>
+  <script src="./app-questions.js"></script>
 </body>
 </html>
