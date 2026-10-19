@@ -50,6 +50,13 @@
     return [...new Set(ids.filter(Boolean))];
   }
 
+  function statusClass(status) {
+    const value = String(status || "").toUpperCase();
+    if (value === "APPROVED") return "approved";
+    if (["NEEDS_CLARIFICATION", "REJECTED", "STALE"].includes(value)) return value === "REJECTED" ? "critical" : "high";
+    return "pending";
+  }
+
   function renderLiveRequirements() {
     const requirements = state.requirements || [];
     if (!requirements.length) {
@@ -59,7 +66,7 @@
 
     table.innerHTML = requirements.map(requirement => `
       <tr>
-        <td><strong>${escapeHtml(requirement.id)}</strong></td>
+        <td><strong>${escapeHtml(requirement.id)}</strong><div class="card-meta">v${requirement.version || 1}</div></td>
         <td>${escapeHtml(requirement.requirement_type || requirement.type || "—")}</td>
         <td>${escapeHtml(requirement.department || "—")}</td>
         <td>
@@ -67,7 +74,7 @@
           <div class="card-meta">${escapeHtml(requirement.description || "")}</div>
           <div class="card-meta">${escapeHtml(requirement.provenance_note || "")}</div>
         </td>
-        <td><span class="status-pill pending">${escapeHtml(requirement.status || "DEPARTMENT_REVIEW")}</span></td>
+        <td><span class="status-pill ${statusClass(requirement.status)}">${escapeHtml(requirement.status || "DEPARTMENT_REVIEW")}</span></td>
       </tr>`).join("");
   }
 
@@ -82,12 +89,34 @@
     return payload;
   }
 
+  function mergeRequirementVersions(incoming) {
+    const previousById = new Map((state.requirements || []).map(item => [item.id, item]));
+    return incoming.map(item => {
+      const previous = previousById.get(item.id);
+      let version = previous?.version || 1;
+      const materiallyChanged = previous && (
+        previous.description !== item.description ||
+        previous.requirement_type !== item.requirement_type ||
+        previous.department !== item.department ||
+        previous.owner !== item.owner
+      );
+      if (materiallyChanged) version += 1;
+      return {
+        ...item,
+        version,
+        status: materiallyChanged ? "DEPARTMENT_REVIEW" : (previous?.status || item.status || "DEPARTMENT_REVIEW"),
+        materiallyChanged: Boolean(materiallyChanged),
+      };
+    });
+  }
+
   async function normalizeRequirements({ automatic = false } = {}) {
     const facts = activeValidatedAnswers();
     if (!facts.length) {
       state.requirements = [];
       renderLiveRequirements();
       statusEl.textContent = "No active VALIDATED facts are ready for normalization.";
+      if (window.renderDepartmentApprovals) window.renderDepartmentApprovals();
       return;
     }
 
@@ -112,13 +141,18 @@
         })),
       });
 
-      state.requirements = response.requirements || [];
+      state.requirements = mergeRequirementVersions(response.requirements || []);
       state.requirementNormalization = {
         at: new Date().toISOString(),
         skippedFactIds: response.skipped_fact_ids || [],
         warnings: response.warnings || [],
       };
       renderLiveRequirements();
+
+      if (window.revalidateDepartmentApprovals) {
+        await window.revalidateDepartmentApprovals();
+      }
+      if (window.renderDepartmentApprovals) window.renderDepartmentApprovals();
 
       const warningText = (response.warnings || []).length
         ? ` ${(response.warnings || []).join(" ")}`
@@ -134,7 +168,6 @@
 
   refreshButton.addEventListener("click", () => normalizeRequirements());
 
-  // Observe completion of validation without changing the validation module itself.
   validateButton.addEventListener("click", () => {
     const beforeRound = Array.isArray(state.validationHistory) ? state.validationHistory.length : 0;
     let attempts = 0;
@@ -155,6 +188,5 @@
   window.normalizeRequirements = normalizeRequirements;
   window.renderLiveRequirements = renderLiveRequirements;
 
-  // New-project flow empties requirements; replace legacy demo rows whenever live answers exist.
   if (Array.isArray(state.answers) && state.answers.length) renderLiveRequirements();
 })();
