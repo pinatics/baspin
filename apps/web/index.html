@@ -65,10 +65,7 @@
       <section id="departments" class="page-section"><div class="section-heading"><div><div class="eyebrow">Ownership</div><h2>Department Status</h2></div></div><div class="card-grid" id="departmentGrid"></div></section>
 
       <section id="questions" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Question Workspace</div><h2>Questions</h2></div>
-          <button class="primary-btn" type="button" id="addQuestionBtn">+ Add Question</button>
-        </div>
+        <div class="section-heading"><div><div class="eyebrow">Question Workspace</div><h2>Questions</h2></div><button class="primary-btn" type="button" id="addQuestionBtn">+ Add Question</button></div>
         <form class="panel question-editor hidden" id="questionEditor">
           <input type="hidden" id="questionEditIndex" value="" />
           <div class="form-grid">
@@ -79,57 +76,27 @@
           </div>
           <label><span>Question</span><textarea id="questionText" rows="3" required></textarea></label>
           <label><span>Related issue / requirement</span><input id="questionRelated" placeholder="Optional" /></label>
-          <div class="form-actions">
-            <button class="primary-btn" type="submit">Save question</button>
-            <button class="secondary-btn" type="button" id="cancelQuestionEdit">Cancel</button>
-          </div>
+          <div class="form-actions"><button class="primary-btn" type="submit">Save question</button><button class="secondary-btn" type="button" id="cancelQuestionEdit">Cancel</button></div>
         </form>
 
         <div class="panel attachment-panel hidden" id="questionAttachmentPanel">
-          <div class="panel-header">
-            <div><div class="eyebrow">Question context</div><h2 id="attachmentPanelTitle">Attachments</h2></div>
-            <button class="secondary-btn" type="button" id="closeAttachmentPanel">Close</button>
-          </div>
+          <div class="panel-header"><div><div class="eyebrow">Question context</div><h2 id="attachmentPanelTitle">Attachments</h2></div><button class="secondary-btn" type="button" id="closeAttachmentPanel">Close</button></div>
           <input type="hidden" id="attachmentQuestionIndex" value="" />
           <div class="attachment-actions">
-            <label class="upload-box">
-              <strong>Upload image or file</strong>
-              <span>Images, PDF, Word, Excel, CSV and text files</span>
-              <input id="questionFileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" />
-            </label>
-            <div class="voice-box">
-              <strong>Voice message</strong>
-              <span>Maximum 5 minutes</span>
-              <div class="form-actions">
-                <button class="primary-btn" type="button" id="startVoiceBtn">Start recording</button>
-                <button class="secondary-btn" type="button" id="stopVoiceBtn" disabled>Stop</button>
-                <span class="voice-timer" id="voiceTimer">00:00 / 05:00</span>
-              </div>
-              <div class="form-status" id="voiceStatus">Microphone permission will be requested when recording starts.</div>
-            </div>
+            <label class="upload-box"><strong>Upload image or file</strong><span>Images, PDF, Word, Excel, CSV and text files</span><input id="questionFileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" /></label>
+            <div class="voice-box"><strong>Voice message</strong><span>Maximum 5 minutes</span><div class="form-actions"><button class="primary-btn" type="button" id="startVoiceBtn">Start recording</button><button class="secondary-btn" type="button" id="stopVoiceBtn" disabled>Stop</button><span class="voice-timer" id="voiceTimer">00:00 / 05:00</span></div><div class="form-status" id="voiceStatus">Microphone permission will be requested when recording starts.</div></div>
           </div>
           <div id="questionAttachmentList" class="attachment-list"></div>
           <div class="attachment-note">Prototype note: attachments currently remain in this browser session. Persistent secure file storage will be connected next.</div>
         </div>
 
-        <div class="panel table-panel">
-          <table>
-            <thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th><th>Type</th><th>Source</th><th>Attachments</th><th>Actions</th></tr></thead>
-            <tbody id="questionTable"></tbody>
-          </table>
-        </div>
+        <div class="panel table-panel"><table><thead><tr><th>Priority</th><th>Department</th><th>Question</th><th>Owner</th><th>Type</th><th>Source</th><th>Attachments</th><th>Actions</th></tr></thead><tbody id="questionTable"></tbody></table></div>
       </section>
 
       <section id="answers" class="page-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">Knowledge Collection</div><h2>Answers & Evidence</h2></div>
-          <button class="primary-btn" type="button" id="validateAnswersBtn">Validate all answers</button>
-        </div>
+        <div class="section-heading"><div><div class="eyebrow">Knowledge Collection</div><h2>Answers & Evidence</h2></div><button class="primary-btn" type="button" id="validateAnswersBtn">Validate all answers</button></div>
         <div class="two-column answer-layout">
-          <div class="panel">
-            <div class="panel-header"><div><div class="eyebrow">Questions</div><h2>Select a question</h2></div></div>
-            <div id="answerQuestionList" class="stack"></div>
-          </div>
+          <div class="panel"><div class="panel-header"><div><div class="eyebrow">Questions</div><h2>Select a question</h2></div></div><div id="answerQuestionList" class="stack"></div></div>
           <form class="panel answer-form" id="answerForm">
             <input type="hidden" id="answerQuestionIndex" value="" />
             <div class="panel-header"><div><div class="eyebrow">Answer record</div><h2 id="answerFormTitle">Choose a question</h2></div></div>
@@ -142,19 +109,25 @@
               <label><span>Process step</span><input id="answerProcessStep" placeholder="e.g. claim_decision" /></label>
               <label class="checkbox-label"><input id="answerApproved" type="checkbox" /> <span>Owner confirmed / approved</span></label>
             </div>
-            <div class="form-actions">
-              <button class="primary-btn" type="submit">Save answer & evidence</button>
-              <span class="form-status" id="answerStatus"></span>
+
+            <div class="answer-own-attachments">
+              <div class="eyebrow">Answer attachments</div>
+              <div class="attachment-actions compact">
+                <label class="upload-box"><strong>Add image or file</strong><input id="answerFileInput" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.ppt,.pptx" /></label>
+                <div class="voice-box"><strong>Voice message</strong><span>Maximum 5 minutes</span><div class="form-actions"><button class="primary-btn" type="button" id="startAnswerVoiceBtn">Start recording</button><button class="secondary-btn" type="button" id="stopAnswerVoiceBtn" disabled>Stop</button><span class="voice-timer" id="answerVoiceTimer">00:00 / 05:00</span></div><div class="form-status" id="answerVoiceStatus"></div></div>
+              </div>
+              <div id="answerOwnAttachmentList" class="attachment-list"></div>
             </div>
+
+            <div class="form-actions"><button class="primary-btn" type="submit">Save answer & evidence</button><span class="form-status" id="answerStatus"></span></div>
           </form>
         </div>
+
+        <div class="section-heading answer-records-heading"><div><div class="eyebrow">Validation thread</div><h2>Topic resolution status</h2></div></div>
+        <div id="topicThreadStatus" class="stack"></div>
+
         <div class="section-heading answer-records-heading"><div><div class="eyebrow">Collected facts</div><h2>Saved answer records</h2></div></div>
-        <div class="panel table-panel">
-          <table>
-            <thead><tr><th>Department</th><th>Topic</th><th>Answer</th><th>Source</th><th>Owner confirmed</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="answerTable"></tbody>
-          </table>
-        </div>
+        <div class="panel table-panel"><table><thead><tr><th>Department</th><th>Topic</th><th>Answer</th><th>Source</th><th>Attachments</th><th>Owner confirmed</th><th>Status</th><th>Actions</th></tr></thead><tbody id="answerTable"></tbody></table></div>
       </section>
 
       <section id="conflicts" class="page-section"><div class="section-heading"><div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div></div><div id="conflictList" class="stack"></div></section>
@@ -170,6 +143,7 @@
   <script src="./app-project.js"></script>
   <script src="./app-questions.js"></script>
   <script src="./app-attachments.js"></script>
+  <script src="./app-answer-attachments.js"></script>
   <script src="./app-answers.js"></script>
 </body>
 </html>
