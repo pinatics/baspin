@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from .approval_models import (
     ApprovalDecisionRequest,
@@ -18,6 +19,19 @@ app = FastAPI(
     title="Baspin API",
     version="0.1.0",
     description="Workflow, approval, consolidation, final approval, and readiness API for Baspin.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://pinatics.github.io",
+        "http://localhost:8000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 
