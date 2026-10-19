@@ -47,9 +47,18 @@
   }
 
   function defaultTopic(question, index) {
-    if (question?.related) return slugify(question.related);
     if (question?.topic) return slugify(question.topic);
+    if (question?.related && !String(question.related).startsWith("validation:")) return slugify(question.related);
     return slugify(`${question?.department || "business"}_${question?.id || `question_${index + 1}`}`);
+  }
+
+  function allSupersededIds() {
+    return new Set(state.answers.flatMap(answer => Array.isArray(answer.supersedes) ? answer.supersedes : []));
+  }
+
+  function activeAnswersForTopic(topic) {
+    const superseded = allSupersededIds();
+    return state.answers.filter(answer => answer.topic === topic && !superseded.has(answer.id));
   }
 
   function renderQuestionContextAttachments(question) {
@@ -102,6 +111,7 @@
   }
 
   function answerStatus(answer) {
+    if (answer.supersededBy) return "SUPERSEDED";
     if (answer.validationStatus) return answer.validationStatus;
     return answer.approved ? "READY TO VALIDATE" : "UNCONFIRMED";
   }
@@ -123,8 +133,8 @@
     if (current.some(f => f.finding_type === "DEPENDENCY")) return "DEPENDENCY";
     if (current.some(f => f.finding_type === "MISSING_INFORMATION" || f.clarification_question)) return "NEEDS CLARIFICATION";
 
-    const topicAnswers = state.answers.filter(a => a.topic === topic);
-    const allValidated = topicAnswers.length && topicAnswers.every(a => a.validationStatus === "VALIDATED");
+    const activeAnswers = activeAnswersForTopic(topic);
+    const allValidated = activeAnswers.length && activeAnswers.every(a => a.validationStatus === "VALIDATED");
     if (allValidated && previousHadBlocking) return "RESOLVED";
     if (allValidated) return "VALIDATED";
     return "IN REVIEW";
@@ -142,7 +152,8 @@
       const rounds = state.validationHistory.filter(round => (round.topics || []).includes(topic)).length;
       const relatedAnswers = state.answers.filter(a => a.topic === topic);
       const relatedQuestions = new Set(relatedAnswers.map(a => a.questionId)).size;
-      return `<div class="mini-card thread-card"><div class="card-row"><div class="card-title">${escapeHtml(topic)}</div><span class="status-pill ${statusClass(status)}">${escapeHtml(status)}</span></div><div class="card-meta">${relatedQuestions} question(s) · ${relatedAnswers.length} answer record(s) · ${rounds} validation round(s)</div></div>`;
+      const supersededCount = relatedAnswers.filter(a => a.supersededBy).length;
+      return `<div class="mini-card thread-card"><div class="card-row"><div class="card-title">${escapeHtml(topic)}</div><span class="status-pill ${statusClass(status)}">${escapeHtml(status)}</span></div><div class="card-meta">${relatedQuestions} question(s) · ${relatedAnswers.length} answer record(s) · ${rounds} validation round(s)${supersededCount ? ` · ${supersededCount} historical fact(s) superseded` : ""}</div></div>`;
     }).join("");
   }
 
@@ -183,7 +194,12 @@
     }
 
     const validatedIds = new Set(response.validated_fact_ids || []);
+    const superseded = allSupersededIds();
     state.answers.forEach(answer => {
+      if (superseded.has(answer.id)) {
+        answer.validationStatus = "SUPERSEDED";
+        return;
+      }
       const related = state.validationFindings.filter(f => (f.related_fact_ids || []).includes(answer.id));
       if (related.some(f => f.blocking)) answer.validationStatus = "BLOCKED";
       else if (related.length) answer.validationStatus = "NEEDS CLARIFICATION";
@@ -198,17 +214,24 @@
       if (state.questions.some(question => question.related === relatedKey)) return;
       const relatedAnswer = state.answers.find(answer => (finding.related_fact_ids || []).includes(answer.id));
       const originalQuestion = relatedAnswer ? state.questions[relatedAnswer.questionIndex] : null;
-      state.questions.push({ id: `clarification-${finding.id}`, priority: finding.severity === "CRITICAL" ? "CRITICAL" : "HIGH", department: relatedAnswer?.department || originalQuestion?.department || "Business Analyst", text: finding.clarification_question, owner: finding.owner || relatedAnswer?.owner || originalQuestion?.owner || "Department Owner", type: "CLARIFICATION", related: relatedKey, source: "AI Generated", editedByBA: false, attachments: [] });
+      state.questions.push({
+        id: `clarification-${finding.id}`,
+        priority: finding.severity === "CRITICAL" ? "CRITICAL" : "HIGH",
+        department: relatedAnswer?.department || originalQuestion?.department || "Business Analyst",
+        text: finding.clarification_question,
+        owner: finding.owner || relatedAnswer?.owner || originalQuestion?.owner || "Department Owner",
+        type: "CLARIFICATION",
+        topic: finding.topic,
+        related: relatedKey,
+        relatedFactIds: [...(finding.related_fact_ids || [])],
+        source: "AI Generated",
+        editedByBA: false,
+        attachments: [],
+      });
       addedClarifications += 1;
     });
 
-    state.validationHistory.push({
-      round: state.validationHistory.length + 1,
-      at: new Date().toISOString(),
-      findings: JSON.parse(JSON.stringify(state.validationFindings)),
-      validatedFactIds: [...validatedIds],
-      topics: [...new Set(state.answers.map(a => a.topic).filter(Boolean))],
-    });
+    state.validationHistory.push({ round: state.validationHistory.length + 1, at: new Date().toISOString(), findings: JSON.parse(JSON.stringify(state.validationFindings)), validatedFactIds: [...validatedIds], topics: [...new Set(state.answers.map(a => a.topic).filter(Boolean))] });
 
     if (window.renderQuestions) window.renderQuestions();
     window.renderAnswers();
@@ -257,6 +280,7 @@
 
     const existingId = editingAnswerIndex !== null ? state.answers[editingAnswerIndex]?.id : null;
     const existingCreatedAt = editingAnswerIndex !== null ? state.answers[editingAnswerIndex]?.createdAt : null;
+    const supersedes = question.type === "CLARIFICATION" && Array.isArray(question.relatedFactIds) ? [...question.relatedFactIds] : [];
     const record = {
       id: existingId || `FACT-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       questionIndex,
@@ -266,12 +290,18 @@
       department: question.department || "", owner: question.owner || "", approved: approvedInput.checked,
       processStep: processStepInput.value.trim(), validationStatus: null,
       attachments: window.getAnswerAttachmentDraft ? window.getAnswerAttachmentDraft() : [],
+      supersedes,
       createdAt: existingCreatedAt || new Date().toISOString(), updatedAt: new Date().toISOString(),
     };
 
+    supersedes.forEach(oldId => {
+      const historical = state.answers.find(answer => answer.id === oldId);
+      if (historical) historical.supersededBy = record.id;
+    });
+
     if (editingAnswerIndex !== null) state.answers[editingAnswerIndex] = record; else state.answers.push(record);
     editingAnswerIndex = null;
-    statusEl.textContent = "Answer, evidence and attachments saved.";
+    statusEl.textContent = supersedes.length ? "Clarification answer saved. Earlier conflicting facts remain in audit history and will be superseded during validation." : "Answer, evidence and attachments saved.";
     valueInput.value = ""; sourceNameInput.value = ""; approvedInput.checked = false;
     if (window.clearAnswerAttachmentDraft) window.clearAnswerAttachmentDraft();
     window.renderAnswers();
@@ -288,11 +318,22 @@
       validateButton.textContent = "Validating…";
       const response = await postJson(`${agentsBase}/validation/evaluate`, {
         project_id: currentProjectId(),
-        facts: state.answers.map(answer => ({ id: answer.id, topic: answer.topic, value: answer.value, source_type: answer.sourceType, source_name: answer.sourceName || null, department: answer.department || null, owner: answer.owner || null, approved: Boolean(answer.approved), process_step: answer.processStep || null })),
+        facts: state.answers.map(answer => ({
+          id: answer.id,
+          topic: answer.topic,
+          value: answer.value,
+          source_type: answer.sourceType,
+          source_name: answer.sourceName || null,
+          department: answer.department || null,
+          owner: answer.owner || null,
+          approved: Boolean(answer.approved),
+          process_step: answer.processStep || null,
+          supersedes: Array.isArray(answer.supersedes) ? answer.supersedes : [],
+        })),
         required_topics: [],
       });
       renderValidationFindings(response);
-      statusEl.textContent = `Validation round ${state.validationHistory.length} complete. ${(response.findings || []).length} finding(s); ${(response.validated_fact_ids || []).length} approved fact(s) validated.`;
+      statusEl.textContent = `Validation round ${state.validationHistory.length} complete. ${(response.findings || []).length} finding(s); ${(response.validated_fact_ids || []).length} approved active fact(s) validated.`;
     } catch (error) {
       statusEl.textContent = `Validation failed: ${error.message || error}`;
     } finally {
