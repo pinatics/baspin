@@ -18,6 +18,7 @@
         <button class="nav-item active" data-section="overview">Overview</button>
         <button class="nav-item" data-section="departments">Departments</button>
         <button class="nav-item" data-section="questions">Questions</button>
+        <button class="nav-item" data-section="answers">Answers & Evidence</button>
         <button class="nav-item" data-section="conflicts">Conflicts</button>
         <button class="nav-item" data-section="requirements">Requirements</button>
         <button class="nav-item" data-section="approvals">Approvals</button>
@@ -91,6 +92,42 @@
         </div>
       </section>
 
+      <section id="answers" class="page-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">Knowledge Collection</div><h2>Answers & Evidence</h2></div>
+          <button class="primary-btn" type="button" id="validateAnswersBtn">Validate all answers</button>
+        </div>
+        <div class="two-column answer-layout">
+          <div class="panel">
+            <div class="panel-header"><div><div class="eyebrow">Questions</div><h2>Select a question</h2></div></div>
+            <div id="answerQuestionList" class="stack"></div>
+          </div>
+          <form class="panel answer-form" id="answerForm">
+            <input type="hidden" id="answerQuestionIndex" value="" />
+            <div class="panel-header"><div><div class="eyebrow">Answer record</div><h2 id="answerFormTitle">Choose a question</h2></div></div>
+            <label><span>Business topic</span><input id="answerTopic" required placeholder="e.g. automatic_claim_approval_threshold" /></label>
+            <label><span>Answer</span><textarea id="answerValue" rows="5" required placeholder="Enter the department's answer or business rule"></textarea></label>
+            <div class="form-grid">
+              <label><span>Source type</span><select id="answerSourceType"><option value="stakeholder_answer">Stakeholder answer</option><option value="policy">Policy</option><option value="procedure">Procedure / SOP</option><option value="system_record">System record</option><option value="contract">Contract</option><option value="regulation">Regulation</option><option value="other">Other</option></select></label>
+              <label><span>Source / evidence name</span><input id="answerSourceName" placeholder="e.g. Claims SOP v3.1" /></label>
+              <label><span>Process step</span><input id="answerProcessStep" placeholder="e.g. claim_decision" /></label>
+              <label class="checkbox-label"><input id="answerApproved" type="checkbox" /> <span>Owner confirmed / approved</span></label>
+            </div>
+            <div class="form-actions">
+              <button class="primary-btn" type="submit">Save answer & evidence</button>
+              <span class="form-status" id="answerStatus"></span>
+            </div>
+          </form>
+        </div>
+        <div class="section-heading answer-records-heading"><div><div class="eyebrow">Collected facts</div><h2>Saved answer records</h2></div></div>
+        <div class="panel table-panel">
+          <table>
+            <thead><tr><th>Department</th><th>Topic</th><th>Answer</th><th>Source</th><th>Owner confirmed</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="answerTable"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section id="conflicts" class="page-section"><div class="section-heading"><div><div class="eyebrow">Validation Agent</div><h2>Conflicts & Clarifications</h2></div></div><div id="conflictList" class="stack"></div></section>
       <section id="requirements" class="page-section"><div class="section-heading"><div><div class="eyebrow">Normalized Knowledge</div><h2>Requirements</h2></div></div><div class="panel table-panel"><table><thead><tr><th>ID</th><th>Type</th><th>Department</th><th>Requirement</th><th>Status</th></tr></thead><tbody id="requirementTable"></tbody></table></div></section>
       <section id="approvals" class="page-section"><div class="section-heading"><div><div class="eyebrow">Human Governance</div><h2>Approvals</h2></div></div><div class="card-grid" id="approvalGrid"></div></section>
@@ -103,5 +140,6 @@
   <script src="./app-live.js"></script>
   <script src="./app-project.js"></script>
   <script src="./app-questions.js"></script>
+  <script src="./app-answers.js"></script>
 </body>
 </html>
