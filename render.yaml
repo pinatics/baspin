@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: baspin-api
+    runtime: python
+    rootDir: services/api
+    buildCommand: pip install -e .
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: baspin-agents
+    runtime: python
+    rootDir: services/agents
+    buildCommand: pip install -e .
+    startCommand: uvicorn baspin_agents.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
