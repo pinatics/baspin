@@ -29,6 +29,7 @@ class ValidationFact(BaseModel):
     owner: Optional[str] = None
     approved: bool = False
     process_step: Optional[str] = None
+    supersedes: list[str] = Field(default_factory=list)
 
 
 class ValidationRequest(BaseModel):
