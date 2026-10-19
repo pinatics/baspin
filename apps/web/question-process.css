@@ -1,0 +1,172 @@
+.status-pill.late {
+  background: #fff1f0;
+  color: #b42318;
+  border: 1px solid #fecdca;
+}
+
+.question-row-late td {
+  background: #fffafa;
+}
+
+.question-row-late td:first-child {
+  box-shadow: inset 3px 0 0 #d92d20;
+}
+
+.question-process-panel {
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.question-process-panel .panel-header {
+  align-items: flex-start;
+}
+
+.question-process-panel h2 {
+  max-width: 900px;
+  line-height: 1.3;
+}
+
+.question-diagram-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: center;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: #f8fafc;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  color: #475467;
+  font-size: 12px;
+}
+
+.late-note {
+  color: #b42318;
+  font-weight: 800;
+}
+
+.question-process-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+}
+
+.question-process-step {
+  min-width: 145px;
+  min-height: 122px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #fff;
+}
+
+.question-process-step.done {
+  background: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.question-process-step.waiting {
+  background: #fffaeb;
+  border-color: #fedf89;
+}
+
+.question-process-step.blocked {
+  background: #fef3f2;
+  border-color: #fecdca;
+}
+
+.question-process-step.locked {
+  background: #f2f4f7;
+  border-color: #e4e7ec;
+}
+
+.process-step-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 900;
+  background: #e4e7ec;
+  color: #475467;
+}
+
+.question-process-step.done .process-step-icon {
+  background: #d1fadf;
+  color: #067647;
+}
+
+.question-process-step.waiting .process-step-icon {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.question-process-step.blocked .process-step-icon {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.process-step-title {
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.process-step-label {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #667085;
+  line-height: 1.3;
+}
+
+.process-arrow {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #98a2b3;
+}
+
+.question-diagram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  border-top: 1px solid #eaecf0;
+  padding-top: 14px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.question-diagram-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-dot.done { background: #12b76a; }
+.legend-dot.waiting { background: #f79009; }
+.legend-dot.blocked { background: #f04438; }
+.legend-dot.locked { background: #98a2b3; }
+
+@media (max-width: 900px) {
+  .question-process-step {
+    min-width: 130px;
+  }
+}
