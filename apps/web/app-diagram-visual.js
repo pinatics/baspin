@@ -1,5 +1,4 @@
 (() => {
-  const panel = document.getElementById("questionProcessPanel");
   const questionsSection = document.getElementById("questions");
   if (!questionsSection) return;
 
@@ -50,17 +49,66 @@
     return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString();
   }
 
-  function nodeClass(stateName) {
-    return `visual-node ${stateName}`;
-  }
-
-  function node(title, subtitle, stateName, icon, extra = "") {
+  function node(title, subtitle, stateName, icon) {
     return `
-      <div class="${nodeClass(stateName)} ${extra}">
+      <div class="visual-node ${stateName}">
         <div class="visual-node-icon">${icon}</div>
         <div class="visual-node-title">${esc(title)}</div>
         <div class="visual-node-subtitle">${esc(subtitle)}</div>
       </div>`;
+  }
+
+  function attachmentIcon(item) {
+    if (item?.kind === "voice" || item?.type === "voice") return "Voice";
+    if (item?.kind === "image" || item?.type?.startsWith?.("image")) return "Image";
+    return "File";
+  }
+
+  function renderAttachments(items = []) {
+    if (!items.length) return `<div class="detail-empty">No attachments.</div>`;
+    return `<div class="detail-attachment-grid">${items.map(item => `
+      <div class="detail-attachment-card">
+        <div class="detail-attachment-type">${esc(attachmentIcon(item))}</div>
+        <div>
+          <strong>${esc(item.name || item.filename || "Attachment")}</strong>
+          <div class="detail-muted">${esc(item.duration ? `${item.duration}s` : item.mimeType || item.type || "Evidence attachment")}</div>
+        </div>
+      </div>`).join("")}</div>`;
+  }
+
+  function renderAnswers(answers) {
+    if (!answers.length) return `<div class="detail-empty">No answer has been received yet.</div>`;
+    return `<div class="detail-answer-list">${answers.map((answer, i) => `
+      <article class="detail-answer-card">
+        <div class="detail-answer-top">
+          <div>
+            <div class="detail-kicker">Answer ${i + 1}</div>
+            <strong>${esc(answer.department || "Department")}</strong>
+          </div>
+          <span class="status-pill ${answer.validationStatus === "VALIDATED" ? "approved" : "pending"}">${esc(answer.validationStatus || "COLLECTED")}</span>
+        </div>
+        <div class="detail-answer-text">${esc(answer.value || "")}</div>
+        <div class="detail-meta-line">
+          <span>Topic: ${esc(answer.topic || "—")}</span>
+          <span>Source: ${esc(answer.sourceName || answer.sourceType || "—")}</span>
+          <span>Owner confirmed: ${answer.approved ? "Yes" : "No"}</span>
+        </div>
+        ${renderAttachments(answer.attachments || [])}
+      </article>`).join("")}</div>`;
+  }
+
+  function buildHistory(question, answers, findings, requirements, approval) {
+    const events = [];
+    (question.auditEvents || []).forEach(event => events.push({ at: event.at, title: event.type?.replaceAll?.("_", " ") || "Question event", detail: event.actor || "" }));
+    answers.forEach(answer => events.push({ at: answer.createdAt || answer.updatedAt, title: "Answer received", detail: answer.department || answer.owner || "Department response" }));
+    findings.forEach(finding => events.push({ at: finding.created_at || null, title: finding.finding_type || "Validation finding", detail: finding.message || finding.description || "Validation issue" }));
+    requirements.forEach(req => events.push({ at: null, title: "Requirement created", detail: `${req.id} · v${req.version || 1}` }));
+    if (approval) events.push({ at: approval.approval?.created_at || null, title: `Department ${approval.packageStatus || "review"}`, detail: approval.approval?.approver || "Department reviewer" });
+    return events.sort((a, b) => {
+      const ta = a.at ? Date.parse(a.at) : Number.MAX_SAFE_INTEGER;
+      const tb = b.at ? Date.parse(b.at) : Number.MAX_SAFE_INTEGER;
+      return ta - tb;
+    });
   }
 
   function render(index) {
@@ -96,73 +144,107 @@
     const requirementState = hasRequirement ? "done" : validated ? "waiting" : "locked";
     const deptState = deptApproved ? "done" : deptRejected ? "blocked" : deptClarify ? "waiting" : hasRequirement ? "waiting" : "locked";
     const finalState = finalApproved ? "done" : deptApproved ? "waiting" : "locked";
-
     const lastAnswer = answers.map(a => a.updatedAt || a.createdAt).filter(Boolean).sort().at(-1);
+    const history = buildHistory(question, answers, findings, requirements, approval);
 
     target.innerHTML = `
       <div class="panel-header visual-diagram-header">
         <div>
-          <div class="eyebrow">Live question flow</div>
-          <h2>${esc(question.department || "Department")} · ${esc(question.text)}</h2>
+          <div class="eyebrow">Question detail</div>
+          <h2>${esc(question.text)}</h2>
         </div>
         <button class="secondary-btn" id="closeQuestionDiagramVisual" type="button">Close</button>
       </div>
 
-      <div class="question-diagram-summary">
-        <span class="status-pill ${status === "VALIDATED" ? "approved" : status === "CONFLICT" ? "critical" : status === "LATE" ? "late" : status === "ANSWERED" ? "high" : "pending"}">${esc(status)}</span>
-        <span>Owner: <strong>${esc(question.owner || "—")}</strong></span>
-        <span>Created: ${esc(dateText(question.createdAt))}</span>
-        <span>Last answer: ${esc(lastAnswer ? dateText(lastAnswer) : "No answer yet")}</span>
-        ${status === "LATE" ? `<span class="late-note">48+ hours without response</span>` : ""}
-      </div>
+      <section class="question-detail-section">
+        <div class="detail-section-title">Question Summary</div>
+        <div class="question-summary-grid">
+          <div class="summary-card"><span>Status</span><strong class="summary-status ${status.toLowerCase()}">${esc(status)}</strong></div>
+          <div class="summary-card"><span>Department</span><strong>${esc(question.department || "—")}</strong></div>
+          <div class="summary-card"><span>Owner</span><strong>${esc(question.owner || "—")}</strong></div>
+          <div class="summary-card"><span>Priority</span><strong>${esc(question.priority || "—")}</strong></div>
+          <div class="summary-card"><span>Type</span><strong>${esc(question.type || "INITIAL")}</strong></div>
+          <div class="summary-card"><span>Source</span><strong>${esc(question.source || "AI Generated")}</strong></div>
+          <div class="summary-card"><span>Created</span><strong>${esc(dateText(question.createdAt))}</strong></div>
+          <div class="summary-card"><span>Last response</span><strong>${esc(lastAnswer ? dateText(lastAnswer) : "No response")}</strong></div>
+          <div class="summary-card"><span>Attachments</span><strong>${(question.attachments || []).length}</strong></div>
+          <div class="summary-card"><span>Answers</span><strong>${answers.length}</strong></div>
+        </div>
+        ${status === "LATE" ? `<div class="late-banner">LATE · More than 48 hours without a response</div>` : ""}
+      </section>
 
-      <div class="visual-flow-shell">
-        <div class="visual-flow-row main-row">
-          ${node("Question", "Created and assigned", "done", "Q")}
-          <div class="visual-connector active"></div>
-          ${node("Answer", hasAnswer ? `${answers.length} response(s)` : "Waiting for response", answerState, "A")}
-          <div class="visual-connector ${hasAnswer ? "active" : ""}"></div>
-          ${node("AI Validation", blocking ? "Blocking issue found" : validated ? "Validated" : hasAnswer ? "Analyzing" : "Not started", validationState, "AI")}
-          <div class="visual-connector ${hasAnswer ? "active" : ""}"></div>
-          <div class="visual-decision-wrap">
-            <div class="visual-decision ${blocking ? "blocked" : validated ? "done" : "waiting"}">
-              <span>Conflict?</span>
+      <section class="question-detail-section">
+        <div class="detail-section-title">Process Status</div>
+        <div class="visual-flow-shell">
+          <div class="visual-flow-row main-row">
+            ${node("Question", "Created and assigned", "done", "Q")}
+            <div class="visual-connector active"></div>
+            ${node("Answer", hasAnswer ? `${answers.length} response(s)` : "Waiting for response", answerState, "A")}
+            <div class="visual-connector ${hasAnswer ? "active" : ""}"></div>
+            ${node("AI Validation", blocking ? "Blocking issue found" : validated ? "Validated" : hasAnswer ? "Analyzing" : "Not started", validationState, "AI")}
+            <div class="visual-connector ${hasAnswer ? "active" : ""}"></div>
+            <div class="visual-decision-wrap"><div class="visual-decision ${blocking ? "blocked" : validated ? "done" : "waiting"}"><span>Conflict?</span></div></div>
+          </div>
+
+          <div class="visual-branch-area">
+            <div class="visual-branch-line vertical"></div>
+            <div class="visual-branch visual-branch-no">
+              <div class="branch-label no">NO / CLEAR</div>
+              ${node("Validated Knowledge", blocking ? "Waiting for resolution" : hadPriorIssue ? "Issue resolved" : validated ? "Clear" : "Pending", clearBranchState, "✓")}
+              <div class="visual-connector ${validated && !blocking ? "active" : ""}"></div>
+              ${node("Requirement", hasRequirement ? `${requirements.length} requirement(s)` : "Not created yet", requirementState, "R")}
+              <div class="visual-connector ${hasRequirement ? "active" : ""}"></div>
+              ${node("Department Approval", deptApproved ? "Approved" : deptRejected ? "Rejected" : deptClarify ? "Clarification / re-approval" : "Pending", deptState, "D")}
+              <div class="visual-connector ${deptApproved ? "active" : ""}"></div>
+              ${node("Final Approval", finalApproved ? "Approved" : deptApproved ? "Pending final approval" : "Locked", finalState, "F")}
+            </div>
+            <div class="visual-branch visual-branch-yes">
+              <div class="branch-label yes">YES / ISSUE</div>
+              ${node("Conflict / Ambiguity", blocking ? "Open finding" : hadPriorIssue ? "Historical issue" : "No issue", conflictBranchState, "!")}
+              <div class="visual-connector ${blocking ? "danger" : hadPriorIssue ? "resolved" : ""}"></div>
+              ${node("Clarification", blocking ? "New question required" : hadPriorIssue ? "Answered" : "Not required", blocking ? "waiting" : hadPriorIssue ? "done" : "locked", "?")}
+              <div class="visual-connector ${hadPriorIssue ? "resolved" : ""}"></div>
+              ${node("Re-validation", blocking ? "Pending" : hadPriorIssue ? "Completed" : "Not required", blocking ? "waiting" : hadPriorIssue ? "done" : "locked", "↻")}
+              <div class="visual-loop-label">returns to AI Validation</div>
             </div>
           </div>
         </div>
+        <div class="question-diagram-legend visual-legend">
+          <span><i class="legend-dot done"></i> Completed / approved</span>
+          <span><i class="legend-dot waiting"></i> Pending / waiting</span>
+          <span><i class="legend-dot blocked"></i> Conflict / rejected / late</span>
+          <span><i class="legend-dot locked"></i> Not started / locked</span>
+        </div>
+      </section>
 
-        <div class="visual-branch-area">
-          <div class="visual-branch-line vertical"></div>
-
-          <div class="visual-branch visual-branch-no">
-            <div class="branch-label no">NO / CLEAR</div>
-            ${node("Validated Knowledge", blocking ? "Waiting for resolution" : hadPriorIssue ? "Issue resolved" : validated ? "Clear" : "Pending", clearBranchState, "✓")}
-            <div class="visual-connector ${validated && !blocking ? "active" : ""}"></div>
-            ${node("Requirement", hasRequirement ? `${requirements.length} requirement(s)` : "Not created yet", requirementState, "R")}
-            <div class="visual-connector ${hasRequirement ? "active" : ""}"></div>
-            ${node("Department Approval", deptApproved ? "Approved" : deptRejected ? "Rejected" : deptClarify ? "Clarification / re-approval" : "Pending", deptState, "D")}
-            <div class="visual-connector ${deptApproved ? "active" : ""}"></div>
-            ${node("Final Approval", finalApproved ? "Approved" : deptApproved ? "Pending final approval" : "Locked", finalState, "F")}
-          </div>
-
-          <div class="visual-branch visual-branch-yes">
-            <div class="branch-label yes">YES / ISSUE</div>
-            ${node("Conflict / Ambiguity", blocking ? "Open finding" : hadPriorIssue ? "Historical issue" : "No issue", conflictBranchState, "!")}
-            <div class="visual-connector ${blocking ? "danger" : hadPriorIssue ? "resolved" : ""}"></div>
-            ${node("Clarification", blocking ? "New question required" : hadPriorIssue ? "Answered" : "Not required", blocking ? "waiting" : hadPriorIssue ? "done" : "locked", "?")}
-            <div class="visual-connector ${hadPriorIssue ? "resolved" : ""}"></div>
-            ${node("Re-validation", blocking ? "Pending" : hadPriorIssue ? "Completed" : "Not required", blocking ? "waiting" : hadPriorIssue ? "done" : "locked", "↻")}
-            <div class="visual-loop-label">returns to AI Validation</div>
+      <section class="question-detail-section detail-two-column">
+        <div>
+          <div class="detail-section-title">Question & Context</div>
+          <div class="detail-content-card">
+            <div class="detail-question-text">${esc(question.text)}</div>
+            <div class="detail-meta-line"><span>Related: ${esc(question.related || "—")}</span><span>Owner: ${esc(question.owner || "—")}</span></div>
+            ${renderAttachments(question.attachments || [])}
           </div>
         </div>
-      </div>
+        <div>
+          <div class="detail-section-title">Validation Result</div>
+          <div class="detail-content-card">
+            ${findings.length ? findings.map(f => `<div class="detail-finding ${f.blocking ? "blocking" : ""}"><strong>${esc(f.finding_type || "Finding")}</strong><span>${esc(f.message || f.description || "Validation finding")}</span></div>`).join("") : `<div class="detail-empty">No active validation findings.</div>`}
+          </div>
+        </div>
+      </section>
 
-      <div class="question-diagram-legend visual-legend">
-        <span><i class="legend-dot done"></i> Completed / approved</span>
-        <span><i class="legend-dot waiting"></i> Pending / waiting</span>
-        <span><i class="legend-dot blocked"></i> Conflict / rejected / late</span>
-        <span><i class="legend-dot locked"></i> Not started / locked</span>
-      </div>`;
+      <section class="question-detail-section">
+        <div class="detail-section-title">Answers & Evidence</div>
+        ${renderAnswers(answers)}
+      </section>
+
+      <section class="question-detail-section">
+        <div class="detail-section-title">History / Iterations</div>
+        <div class="detail-timeline">
+          ${history.length ? history.map(event => `<div class="timeline-item"><div class="timeline-dot"></div><div><strong>${esc(event.title)}</strong><div class="detail-muted">${esc(event.at ? dateText(event.at) : "Current workflow")} · ${esc(event.detail || "")}</div></div></div>`).join("") : `<div class="detail-empty">No history yet.</div>`}
+        </div>
+      </section>`;
 
     target.classList.remove("hidden");
     document.getElementById("closeQuestionDiagramVisual")?.addEventListener("click", () => target.classList.add("hidden"));
