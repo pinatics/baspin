@@ -1,3 +1,9 @@
+const config = window.BASPIN_CONFIG || {
+  mode: "demo",
+  workflowApiBaseUrl: "",
+  agentsApiBaseUrl: "",
+};
+
 const state = {
   resolved: false,
   departments: [
@@ -41,6 +47,7 @@ const state = {
       department: "Claims Operations",
       description: "Eligible claims up to $25,000 may be automatically approved when required documents are complete, coverage is valid, and no blocking fraud or exception condition exists.",
       status: "PENDING",
+      required: true,
     },
     {
       id: "REQ-FIN-001",
@@ -48,6 +55,7 @@ const state = {
       department: "Finance",
       description: "Payment release above $15,000 requires Finance authorization.",
       status: "APPROVED",
+      required: true,
     },
     {
       id: "REQ-LEGAL-001",
@@ -55,6 +63,7 @@ const state = {
       department: "Legal",
       description: "Automated claim decision evidence must be retained for 7 years.",
       status: "APPROVED",
+      required: true,
     },
   ],
 };
@@ -70,6 +79,20 @@ const workflowSteps = [
   "Readiness Gate",
 ];
 
+function currentDepartments() {
+  return state.departments.map((department, index) => ({
+    ...department,
+    status: state.resolved && index === 0 ? "APPROVED" : department.status,
+  }));
+}
+
+function currentRequirements() {
+  return state.requirements.map((requirement, index) => ({
+    ...requirement,
+    status: state.resolved && index === 0 ? "APPROVED" : requirement.status,
+  }));
+}
+
 function slugStatus(value) {
   const v = value.toLowerCase();
   if (v.includes("approved") || v.includes("pass") || v.includes("ready")) return "approved";
@@ -79,15 +102,37 @@ function slugStatus(value) {
 }
 
 function renderMetrics() {
-  const approvedDepartments = state.departments.filter(d => d.status === "APPROVED").length;
+  const departments = currentDepartments();
+  const requirements = currentRequirements();
+  const requiredDepartments = departments.filter(d => d.required);
+  const approvedRequiredDepartments = requiredDepartments.filter(d => d.status === "APPROVED").length;
+  const requiredRequirements = requirements.filter(r => r.required);
+  const approvedRequiredRequirements = requiredRequirements.filter(r => r.status === "APPROVED").length;
   const openConflicts = state.resolved ? 0 : 1;
-  const approvedRequirements = state.requirements.filter(r => r.status === "APPROVED").length;
+
   const metrics = [
-    ["Required departments", `${approvedDepartments}/${state.departments.length}`, state.resolved ? "All required owners approved" : "Claims still needs clarification"],
-    ["Open blocking conflicts", openConflicts, openConflicts ? "1 conflict blocks progression" : "No blocking conflicts"],
-    ["Approved requirements", `${approvedRequirements}/${state.requirements.length}`, "Human-approved requirement set"],
-    ["Readiness", state.resolved ? "READY" : "BLOCKED", state.resolved ? "Eligible for delivery" : "Gate conditions not satisfied"],
+    [
+      "Required departments",
+      `${approvedRequiredDepartments}/${requiredDepartments.length}`,
+      state.resolved ? "All required owners approved" : "Claims still needs clarification",
+    ],
+    [
+      "Open blocking conflicts",
+      openConflicts,
+      openConflicts ? "1 conflict blocks progression" : "No blocking conflicts",
+    ],
+    [
+      "Mandatory requirements",
+      `${approvedRequiredRequirements}/${requiredRequirements.length}`,
+      state.resolved ? "All mandatory requirements approved" : "Claims requirement still pending",
+    ],
+    [
+      "Readiness",
+      state.resolved ? "READY" : "BLOCKED",
+      state.resolved ? "Eligible for delivery" : "Gate conditions not satisfied",
+    ],
   ];
+
   document.getElementById("metricGrid").innerHTML = metrics.map(([label, value, note]) => `
     <div class="metric">
       <div class="metric-label">${label}</div>
@@ -123,14 +168,18 @@ function renderWorkflow() {
 function renderBlockers() {
   const container = document.getElementById("blockers");
   const button = document.getElementById("resolveDemoBtn");
+  const title = document.getElementById("readinessPanelTitle");
+
   if (state.resolved) {
+    title.textContent = "Why the project is ready";
     container.innerHTML = `
       <div class="blocker" style="background:var(--good-bg);border-color:#abefc6">
         <strong style="color:var(--good)">All mandatory blockers resolved</strong>
-        <span style="color:#05603a">The authoritative Claims threshold is confirmed at $25,000 and downstream approvals are complete.</span>
+        <span style="color:#05603a">The authoritative Claims threshold is confirmed at $25,000, all 6 required departments approved, and all mandatory requirements are approved.</span>
       </div>`;
     button.textContent = "Reset demo";
   } else {
+    title.textContent = "Why the project is blocked";
     container.innerHTML = `
       <div class="blocker">
         <strong>Claims threshold conflict</strong>
@@ -145,8 +194,7 @@ function renderBlockers() {
 }
 
 function renderDepartments() {
-  const departments = state.departments.map(d => ({ ...d }));
-  if (state.resolved) departments[0].status = "APPROVED";
+  const departments = currentDepartments();
   document.getElementById("departmentGrid").innerHTML = departments.map(d => `
     <div class="mini-card">
       <div class="card-row">
@@ -183,8 +231,7 @@ function renderConflicts() {
 }
 
 function renderRequirements() {
-  const requirements = state.requirements.map(r => ({ ...r }));
-  if (state.resolved) requirements[0].status = "APPROVED";
+  const requirements = currentRequirements();
   document.getElementById("requirementTable").innerHTML = requirements.map(r => `
     <tr>
       <td><strong>${r.id}</strong></td>
@@ -282,6 +329,19 @@ function renderAll() {
   renderReadinessBadge();
 }
 
+async function checkBackendHealth() {
+  if (config.mode !== "live" || !config.workflowApiBaseUrl) return;
+
+  try {
+    const response = await fetch(`${config.workflowApiBaseUrl.replace(/\/$/, "")}/health`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const health = await response.json();
+    console.info("Baspin workflow API connected", health);
+  } catch (error) {
+    console.warn("Baspin workflow API unavailable; dashboard remains in demo state.", error);
+  }
+}
+
 document.querySelectorAll(".nav-item").forEach(button => {
   button.addEventListener("click", () => {
     document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
@@ -297,3 +357,4 @@ document.getElementById("resolveDemoBtn").addEventListener("click", () => {
 });
 
 renderAll();
+checkBackendHealth();
