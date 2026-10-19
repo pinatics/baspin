@@ -2,8 +2,12 @@
   let lastSignature = "";
   let busy = false;
 
+  function hasState() {
+    return typeof state !== "undefined";
+  }
+
   function signature() {
-    const approvals = (window.state?.departmentApprovals || []).map(item => [
+    const approvals = (state.departmentApprovals || []).map(item => [
       item.requirementId,
       item.requirementVersion,
       item.packageStatus,
@@ -11,12 +15,12 @@
       item.stale,
       item.approval?.id || "",
     ].join(":"));
-    const reqs = (window.state?.requirements || []).map(req => `${req.id}:v${req.version || 1}:${req.status || ""}`);
+    const reqs = (state.requirements || []).map(req => `${req.id}:v${req.version || 1}:${req.status || ""}`);
     return [...approvals, ...reqs].sort().join("|");
   }
 
   async function tick() {
-    if (busy || typeof window.refreshCompletionFlow !== "function" || !window.state) return;
+    if (busy || typeof window.refreshCompletionFlow !== "function" || !hasState()) return;
     const next = signature();
     if (!next || next === lastSignature) return;
     lastSignature = next;
