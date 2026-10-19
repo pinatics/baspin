@@ -40,6 +40,21 @@
     return "pending";
   }
 
+  function readableApiError(payload, fallbackStatus) {
+    const detail = payload?.detail;
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) {
+      return detail.map(item => {
+        const location = Array.isArray(item?.loc) ? item.loc.join(" → ") : "request";
+        return `${location}: ${item?.msg || "validation error"}`;
+      }).join(" | ");
+    }
+    if (detail && typeof detail === "object") {
+      return detail.message || detail.msg || JSON.stringify(detail);
+    }
+    return `HTTP ${fallbackStatus}`;
+  }
+
   async function postJson(url, body) {
     const response = await fetch(url, {
       method: "POST",
@@ -47,23 +62,29 @@
       body: JSON.stringify(body),
     });
     const payload = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(payload?.detail || `HTTP ${response.status}`);
+    if (!response.ok) throw new Error(readableApiError(payload, response.status));
     return payload;
+  }
+
+  function requirementTitle(requirement) {
+    if (requirement.title) return requirement.title;
+    if (requirement.id) return `${requirement.id} — ${requirement.type || requirement.requirement_type || "Requirement"}`;
+    return "Business Requirement";
   }
 
   function buildPackage(requirement) {
     return {
       id: `PKG-${requirement.id}-v${requirement.version || 1}`,
       project_id: projectId(),
-      department: requirement.department,
-      reviewer: requirement.owner || `${requirement.department} Owner`,
+      department: requirement.department || "Business",
+      reviewer: requirement.owner || `${requirement.department || "Business"} Owner`,
       requirements: [{
         requirement_id: requirement.id,
         version: requirement.version || 1,
-        title: requirement.title,
-        description: requirement.description,
+        title: requirementTitle(requirement),
+        description: requirement.description || requirement.value || requirementTitle(requirement),
         owner: requirement.owner || null,
-        department: requirement.department,
+        department: requirement.department || "Business",
       }],
       open_conflict_ids: openConflictIdsForRequirement(requirement),
       status: "SENT_FOR_REVIEW",
@@ -77,7 +98,7 @@
     const commentEl = document.querySelector(`[data-approval-comment="${requirementId}"]`);
     const approverEl = document.querySelector(`[data-approval-approver="${requirementId}"]`);
     const statusEl = document.querySelector(`[data-approval-status="${requirementId}"]`);
-    const approver = approverEl?.value.trim() || requirement.owner || `${requirement.department} Owner`;
+    const approver = approverEl?.value.trim() || requirement.owner || `${requirement.department || "Business"} Owner`;
     const comment = commentEl?.value.trim() || null;
 
     if (statusEl) statusEl.textContent = "Submitting decision…";
@@ -118,7 +139,7 @@
             text: clarificationText,
             owner: requirement.owner || baseQuestion?.owner || "Department Owner",
             type: "CLARIFICATION",
-            topic: relatedAnswer?.topic || requirement.title,
+            topic: relatedAnswer?.topic || requirementTitle(requirement),
             related: `approval:${requirement.id}:v${requirement.version || 1}`,
             source: "Human Review",
             editedByBA: false,
@@ -131,6 +152,9 @@
 
       if (window.renderLiveRequirements) window.renderLiveRequirements();
       window.renderDepartmentApprovals();
+      if (typeof window.refreshCompletionFlow === "function") {
+        await window.refreshCompletionFlow();
+      }
     } catch (error) {
       if (statusEl) statusEl.textContent = `Approval failed: ${error.message || error}`;
     }
@@ -156,7 +180,7 @@
           <div class="card-row">
             <div>
               <div class="eyebrow">${escapeHtml(requirement.department || "Department")}</div>
-              <div class="card-title">${escapeHtml(requirement.title || requirement.id)}</div>
+              <div class="card-title">${escapeHtml(requirementTitle(requirement))}</div>
             </div>
             <span class="status-pill ${statusClass(currentStatus)}">${escapeHtml(currentStatus)}</span>
           </div>
