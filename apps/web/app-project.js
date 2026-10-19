@@ -45,8 +45,11 @@
 
   function renderCollectingProject(project, departments, questions) {
     state.resolved = false;
+    state.currentProject = project;
     state.departments = departments;
     state.questions = questions;
+    state.answers = [];
+    state.validationFindings = [];
     state.requirements = [];
 
     document.getElementById("projectTitle").textContent = project.name;
@@ -86,6 +89,7 @@
 
     renderDepartments();
     renderQuestions();
+    if (window.renderAnswers) window.renderAnswers();
 
     document.getElementById("conflictList").innerHTML = `<div class="mini-card"><div class="card-title">No conflicts evaluated yet</div><div class="card-meta">Conflicts will appear after department answers and evidence are validated.</div></div>`;
     document.getElementById("requirementTable").innerHTML = `<tr><td colspan="5">No normalized requirements yet. Validation must happen first.</td></tr>`;
@@ -129,10 +133,15 @@
       })));
 
       const questions = results.flatMap((result, index) => (result.questions || []).map(question => ({
+        id: question.id,
         priority: question.priority,
         department: departments[index].name,
         text: question.text,
         owner: question.expected_owner || departments[index].owner,
+        type: question.question_type || "INITIAL",
+        related: question.related_issue || "",
+        source: "AI Generated",
+        editedByBA: false,
       })));
 
       renderCollectingProject(project, departments, questions);
