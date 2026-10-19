@@ -7,6 +7,8 @@ from .normalization_models import NormalizationRequest, NormalizationResponse
 from .okf_agent import OKFConversionAgent
 from .okf_models import OKFConversionRequest, OKFConversionResponse
 from .question_agent import QuestionAgent
+from .topic_agent import TopicNormalizationAgent
+from .topic_models import TopicNormalizationRequest, TopicNormalizationResponse
 from .validation_agent import ValidationAgent
 from .validation_models import ValidationRequest, ValidationResponse
 
@@ -31,6 +33,7 @@ app.add_middleware(
 
 _question_agent = QuestionAgent()
 _validation_agent = ValidationAgent()
+_topic_agent = TopicNormalizationAgent()
 _normalization_agent = RequirementNormalizationAgent()
 _okf_agent = OKFConversionAgent()
 
@@ -43,6 +46,11 @@ def health() -> dict[str, str]:
 @app.post("/questions/generate", response_model=QuestionAgentResponse)
 def generate_questions(request: QuestionAgentRequest) -> QuestionAgentResponse:
     return _question_agent.generate(request)
+
+
+@app.post("/topics/normalize", response_model=TopicNormalizationResponse)
+def normalize_topics(request: TopicNormalizationRequest) -> TopicNormalizationResponse:
+    return _topic_agent.normalize(request)
 
 
 @app.post("/validation/evaluate", response_model=ValidationResponse)
