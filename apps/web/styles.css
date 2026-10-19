@@ -131,6 +131,13 @@ p { color: var(--muted); margin: 0; line-height: 1.55; }
 .answer-question-card span { font-size: 13px; line-height: 1.45; color: var(--text); }
 .answer-question-card small { color: var(--muted); }
 .answer-question-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.answer-context-attachments { margin-bottom: 18px; border: 1px solid #c7d7fe; background: #f7f9ff; border-radius: 12px; padding: 14px; }
+.answer-context-title { font-size: 12px; font-weight: 800; color: #3538cd; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+.answer-context-list { display: grid; gap: 10px; }
+.answer-context-item { border: 1px solid #dbe3ff; background: #fff; border-radius: 10px; padding: 10px; display: flex; gap: 12px; align-items: flex-start; }
+.answer-context-image { width: 110px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.answer-context-item audio { width: min(100%, 320px); margin-top: 8px; }
+.attachment-open-link { display: inline-block; margin-top: 6px; color: var(--accent); font-size: 12px; font-weight: 700; text-decoration: none; }
 .checkbox-label { display: flex !important; grid-template-columns: none; align-items: center; gap: 8px !important; min-height: 43px; padding-top: 23px; }
 .checkbox-label input { width: auto !important; }
 .answer-records-heading { margin-top: 26px; }
@@ -179,4 +186,6 @@ pre { overflow-x: auto; background: #0b1220; color: #d1e9ff; border-radius: 10px
   .two-column, .metric-grid, .card-grid, .nav, .form-grid, .answer-layout { grid-template-columns: 1fr; }
   .attachment-item, .attachment-main { align-items: flex-start; }
   .attachment-main { flex-direction: column; }
+  .answer-context-item { flex-direction: column; }
+  .answer-context-image { width: 100%; height: auto; max-height: 220px; }
 }
